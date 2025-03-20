@@ -50,7 +50,7 @@ end
 --[[Window Movement]]--
 
 -- Move window to the top of the screen
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", function()
+local function moveWindowToTop()
   local win = hs.window.focusedWindow()
 
   local screen = win:screen()
@@ -59,10 +59,11 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", function()
   local f = win:frame()
   f.y = max.y
   win:setFrame(f)
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", moveWindowToTop)
 
 -- Move window to the bottom of the screen
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", function()
+local function moveWindowToBottom()
   local win = hs.window.focusedWindow()
 
   local screen = win:screen()
@@ -71,10 +72,11 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", function()
   local f = win:frame()
   f.y = max.y + max.h - f.h
   win:setFrame(f)
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", moveWindowToBottom)
 
 -- Move window to the right side of the screen
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
+local function moveWindowToRight()
   local win = hs.window.focusedWindow()
 
   local screen = win:screen()
@@ -83,10 +85,11 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", function()
   local f = win:frame()
   f.x = max.x + max.w - f.w
   win:setFrame(f)
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", moveWindowToRight)
 
 -- Move window to the left side of the screen
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
+local function moveWindowToLeft()
   local win = hs.window.focusedWindow()
 
   local screen = win:screen()
@@ -95,13 +98,14 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", function()
   local f = win:frame()
   f.x = max.x
   win:setFrame(f)
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", moveWindowToLeft)
 
 --[[Window Resizing]]--
 local windowPreviousFrames = {}
 
 -- Center window
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
+local function windowToCenter()
   local win = hs.window.focusedWindow()
   local screen = win:screen()
   local max = screen:frame()
@@ -110,10 +114,11 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", function()
   f.x = max.x + (max.w - f.w) / 2
   f.y = max.y + (max.h - f.h) / 2
   win:setFrame(f)
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", windowToCenter)
 
 -- Maximize window
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
+local function windowMaximize()
   local win = hs.window.focusedWindow()
   local currentFrame = win:frame()
   local screenFrame = win:screen():frame()
@@ -122,10 +127,11 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", function()
     windowPreviousFrames[win:id()] = currentFrame
     win:setFrame(screenFrame)
   end
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", windowMaximize)
 
 -- Restore window
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "return", function()
+local function windowRestorePreviousSize()
   local win = hs.window.focusedWindow()
   local prevFrame = windowPreviousFrames[win:id()]
 
@@ -133,7 +139,8 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "return", function()
     win:setFrame(prevFrame)
     windowPreviousFrames[win:id()] = nil
   end
-end)
+end
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "return", windowRestorePreviousSize)
 
 -- Maximize window height
 local function maximizeWindowHeight()
