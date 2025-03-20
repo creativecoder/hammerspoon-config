@@ -296,48 +296,79 @@ hs.hotkey.bind({"cmd","alt","ctrl"}, "=", function() windowResizeStep(1.05) end)
 
 local function moveWindowToScreen(direction)
   return function()
-    local win = hs.window.focusedWindow()
-    local currentScreen = win:screen()
-    local newScreen = direction == "right" and currentScreen:next() or currentScreen:previous()
+    local windowObj = hs.window.focusedWindow()
+    if not windowObj then return end
 
-    if not newScreen then
-      return
-    end
+    -- Move window to new screen, only resize if needed, and place in the same relative screen position
 
-    -- Move window to new screen, don't resize, and place in the same relative screen position
-
-    local currentFrame = win:frame()
-    local currentScreenFrame = currentScreen:frame()
-    local newScreenFrame = newScreen:frame()
+    local screenObj = windowObj:screen()
+    local window = windowObj:frame()
+    local screen = screenObj:frame()
+    local newScreenObj = direction == "right" and screenObj:next() or screenObj:previous()
+    local newScreen = newScreenObj:frame()
     local newX, newY, newW, newH
 
-    -- Negative space around window before moving
-    local oldAvailW = currentScreenFrame.w - currentFrame.w
-    local oldAvailH = currentScreenFrame.h - currentFrame.h
+    -- Simulate centering the new screen inside the current one, then check the window position
+    -- If the window is effectively inside the new screen, move it to the same position on the new screen
+    -- Otherwise calculate the same relative window position on the new screen
+    -- local newScreenBoundX = (screen.w - newScreen.w)/2 + screen.x
+    -- local newScreenBoundY = (screen.h - newScreen.h)/2 + screen.y
+    -- local windowWidthInScreenBounds = window.x > newScreenBoundX and window.w < newScreen.w
+    -- local windowHeightInScreenBounds = window.y > newScreenBoundY and window.h < newScreen.h
 
     -- Horizontal positioning
-    if oldAvailW <= 0 then
-      newX = newScreenFrame.x + (newScreenFrame.w - currentFrame.w)/2  -- Center if window was at max width
+    if window.w > newScreen.w then
+      -- Maximize window width if larger than new screen
+      newX = newScreen.x
+      newW = newScreen.w
+    elseif window.w >= (screen.w - 2) then
+      -- Center on new screen if window is at or near max width
+      newX = newScreen.x + (newScreen.w - window.w)/2
+      newW = window.w
+    -- elseif not windowWidthInScreenBounds then
+    --   -- Clamp new window position to nearest screen edge
+    --   if window.x > newScreenBoundX then
+    --     newX = (newScreen.x + newScreen.w) - window.w
+    --   else
+    --     newX = newScreen.x
+    --   end
+    --   newW = window.w
     else
-      local newAvailW = newScreenFrame.w - currentFrame.w
-      local leftMargin = currentFrame.x - currentScreenFrame.x
-      newX = newScreenFrame.x + (leftMargin/oldAvailW) * newAvailW -- Otherwise position window in the same relative position
+      -- Place window in the same relative position on the new screen
+      local prevAvailableWidth = screen.w - window.w
+      local newAvailableWidth = newScreen.w - window.w
+      local leftMargin = window.x - screen.x
+      newX = newScreen.x + (leftMargin/prevAvailableWidth) * newAvailableWidth
+      newW = window.w
     end
-
-    newW = currentFrame.w
 
     -- Vertical positioning
-    if oldAvailH <= 0 then
-      newY = 0 -- Move to top if window was at max height
+    if window.h > newScreen.h then
+      -- Maximize on new screen if window is larger than new screen
+      newY = newScreen.y
+      newH = newScreen.h
+    elseif window.h >= (screen.h - 2) then
+      -- Move to top if window is at or near max height
+      newY = newScreen.y
+      newH = window.h
+    -- elseif not windowHeightInScreenBounds then
+    --   -- Clamp new window position to nearest edge
+    --   if window.y > newScreenBoundY then
+    --     newY = (newScreen.y + newScreen.h) - window.h
+    --   else
+    --     newY = newScreen.y
+    --   end
+    --   newH = window.h
     else
-      local newAvailH = newScreenFrame.h - currentFrame.h
-      local topMargin = currentFrame.y - currentScreenFrame.y
-      newY = newScreenFrame.y + (topMargin/oldAvailH) * newAvailH -- Otherwise position window in the same relative position
+      -- Place window in the same relative position on the new screen
+      local prevAvailableHeight = screen.h - window.h
+      local newAvailableHeight = newScreen.h - window.h
+      local topMargin = window.y - screen.y
+      newY = newScreen.y + (topMargin/prevAvailableHeight) * newAvailableHeight
+      newH = window.h
     end
 
-    newH = currentFrame.h
-
-    win:setFrameInScreenBounds(hs.geometry.rect(newX, newY, newW, newH))
+    windowObj:setFrameInScreenBounds(hs.geometry.rect(newX, newY, newW, newH))
   end
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl", "shift"}, "right", moveWindowToScreen("right"))
