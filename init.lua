@@ -51,53 +51,53 @@ end
 
 -- Move window to the top of the screen
 local function moveWindowToTop()
-  local win = hs.window.focusedWindow()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local screen = win:screen()
-  local max = screen:frame()
+  local screenFrame = window:screen():frame()
+  local winFrame = window:frame()
 
-  local f = win:frame()
-  f.y = max.y
-  win:setFrame(f)
+  winFrame.y = screenFrame.y
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "up", moveWindowToTop)
 
 -- Move window to the bottom of the screen
 local function moveWindowToBottom()
-  local win = hs.window.focusedWindow()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local screen = win:screen()
-  local max = screen:frame()
+  local screenFrame = window:screen():frame()
+  local winFrame = window:frame()
 
-  local f = win:frame()
-  f.y = max.y + max.h - f.h
-  win:setFrame(f)
+  winFrame.y = screenFrame.y + screenFrame.h - winFrame.h
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "down", moveWindowToBottom)
 
 -- Move window to the right side of the screen
 local function moveWindowToRight()
-  local win = hs.window.focusedWindow()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local screen = win:screen()
-  local max = screen:frame()
+  local screenFrame = window:screen():frame()
+  local winFrame = window:frame()
 
-  local f = win:frame()
-  f.x = max.x + max.w - f.w
-  win:setFrame(f)
+  winFrame.x = screenFrame.x + screenFrame.w - winFrame.w
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "right", moveWindowToRight)
 
 -- Move window to the left side of the screen
 local function moveWindowToLeft()
-  local win = hs.window.focusedWindow()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local screen = win:screen()
-  local max = screen:frame()
+  local screenFrame = window:screen():frame()
+  local winFrame = window:frame()
 
-  local f = win:frame()
-  f.x = max.x
-  win:setFrame(f)
+  winFrame.x = screenFrame.x
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "left", moveWindowToLeft)
 
@@ -106,196 +106,188 @@ local windowPreviousFrames = {}
 
 -- Center window
 local function windowToCenter()
-  local win = hs.window.focusedWindow()
-  local screen = win:screen()
-  local max = screen:frame()
-  local f = win:frame()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  f.x = max.x + (max.w - f.w) / 2
-  f.y = max.y + (max.h - f.h) / 2
-  win:setFrame(f)
+  local screenFrame = window:screen():frame()
+  local winFrame = window:frame()
+
+  winFrame.x = screenFrame.x + (screenFrame.w - winFrame.w) / 2
+  winFrame.y = screenFrame.y + (screenFrame.h - winFrame.h) / 2
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "c", windowToCenter)
 
 -- Maximize window
 local function windowMaximize()
-  local win = hs.window.focusedWindow()
-  local currentFrame = win:frame()
-  local screenFrame = win:screen():frame()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  if not currentFrame:equals(screenFrame) then
-    windowPreviousFrames[win:id()] = currentFrame
-    win:setFrame(screenFrame)
-  end
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
+
+  -- Window already maximized
+  if winFrame:equals(screenFrame) then return end
+
+  windowPreviousFrames[window:id()] = winFrame
+  window:setFrame(screenFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "m", windowMaximize)
 
 -- Restore window
 local function windowRestorePreviousSize()
-  local win = hs.window.focusedWindow()
-  local prevFrame = windowPreviousFrames[win:id()]
+  local window = hs.window.focusedWindow()
+  if not window then return end
+
+  local prevFrame = windowPreviousFrames[window:id()]
 
   if prevFrame then
-    win:setFrame(prevFrame)
-    windowPreviousFrames[win:id()] = nil
+    window:setFrame(prevFrame)
+    windowPreviousFrames[window:id()] = nil
   end
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "return", windowRestorePreviousSize)
 
 -- Maximize window height
 local function maximizeWindowHeight()
-  local win = hs.window.focusedWindow()
-  local currentFrame = win:frame()
-  local screenFrame = win:screen():frame()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  if currentFrame.h == screenFrame.h then return end  -- Already max height
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
+
+  if winFrame.h == screenFrame.h then return end -- Already max height
 
   local newFrame = hs.geometry.rect(
-    currentFrame.x,        -- Keep horizontal position
-    screenFrame.y,         -- Align to top of screen
-    currentFrame.w,        -- Keep current width
-    screenFrame.h          -- Set to full screen height
+    winFrame.x, -- Keep horizontal position
+    screenFrame.y,  -- Align to top of screen
+    winFrame.w, -- Keep current width
+    screenFrame.h   -- Set to full screen height
   )
-  win:setFrameInScreenBounds(newFrame)
+  window:setFrameInScreenBounds(newFrame)
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl", "shift"}, "up", maximizeWindowHeight)
 
 -- Half screen functions
 local function windowRightHalf()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x+max.w/2, max.y, max.w/2, max.h
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x + screenFrame.w / 2, screenFrame.y, screenFrame.w / 2, screenFrame.h
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "3", windowRightHalf)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "d", windowRightHalf)
 
 local function windowLeftHalf()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x, max.y, max.w/2, max.h
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x, screenFrame.y, screenFrame.w / 2, screenFrame.h
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "1", windowLeftHalf)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "a", windowLeftHalf)
 
 local function windowTopHalf()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x, max.y, max.w, max.h/2
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x, screenFrame.y, screenFrame.w, screenFrame.h / 2
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "8", windowTopHalf)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "w", windowTopHalf)
 
 local function windowBottomHalf()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x, max.y+max.h/2, max.w, max.h/2
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x, screenFrame.y + screenFrame.h / 2, screenFrame.w, screenFrame.h / 2
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "2", windowBottomHalf)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "s", windowBottomHalf)
 
 -- Two-thirds functions
 local function windowLeftTwoThirds()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x, max.y, max.w*2/3, max.h
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x, screenFrame.y, screenFrame.w*2 / 3, screenFrame.h
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "7", windowLeftTwoThirds)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "q", windowLeftTwoThirds)
 
 local function windowRightTwoThirds()
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
 
-  local f = win:frame()
-
-  local max = win:screen():frame()
-  f.x, f.y, f.w, f.h = max.x+max.w/3, max.y, max.w*2/3, max.h
-
-  win:setFrame(f)
-
+  winFrame.x, winFrame.y, winFrame.w, winFrame.h = screenFrame.x + screenFrame.w / 3, screenFrame.y, screenFrame.w*2 / 3, screenFrame.h
+  window:setFrame(winFrame)
 end
 hs.hotkey.bind({"cmd","alt","ctrl"}, "9", windowRightTwoThirds)
 hs.hotkey.bind({"cmd","alt","ctrl"}, "e", windowRightTwoThirds)
 
 -- Resize functions
 local function windowResizeStep(scale)
+  local window = hs.window.focusedWindow()
+  if not window then return end
 
-  local win = hs.window.focusedWindow()
-
-  local frame = win:frame()
-  local screen = win:screen()
-  local max = screen:frame()
-  local isMaximized = frame:equals(max)
+  local winFrame = window:frame()
+  local screenFrame = window:screen():frame()
+  local isMaximized = winFrame:equals(screenFrame)
 
   -- Check if window is already maximized
-  if isMaximized and scale > 1 then
-    return
-  end
+  if isMaximized and scale > 1 then return end
 
   -- Calculate new dimensions with constraints
-  local newWidth = math.min(frame.w * scale, max.w)
-  local newHeight = math.min(frame.h * scale, max.h)
+  local newWidth = math.min(winFrame.w * scale, screenFrame.w)
+  local newHeight = math.min(winFrame.h * scale, screenFrame.h)
 
   -- Check if any window edges are aligned at the edge of the screen
-  local leftAligned, rightAligned, topAligned, bottomAligned = isWindowAtScreenEdges(frame, max)
+  local leftAligned, rightAligned, topAligned, bottomAligned = isWindowAtScreenEdges(winFrame, screenFrame)
 
   -- Adjust X position
   if leftAligned and not isMaximized then
-    frame.x = max.x -- Stay on left edge
+    winFrame.x = screenFrame.x -- Stay on left edge
   elseif rightAligned and not isMaximized then
-    frame.x = max.x + max.w - newWidth -- Stay on right edge
+    winFrame.x = screenFrame.x + screenFrame.w - newWidth -- Stay on right edge
   else
-    frame.x = frame.x + (frame.w - newWidth)/2  -- Center horizontally if no edge alignment
+    winFrame.x = winFrame.x + (winFrame.w - newWidth)/2  -- Center horizontally if no edge alignment
   end
 
   -- Adjust Y position
   if topAligned and not isMaximized then
-    frame.y = max.y -- Stay on top edge
+    winFrame.y = screenFrame.y -- Stay on top edge
   elseif bottomAligned and not isMaximized then
-    frame.y = max.y + max.h - newHeight -- Stay on bottom edge
+    winFrame.y = screenFrame.y + screenFrame.h - newHeight -- Stay on bottom edge
   else
-    frame.y = frame.y + (frame.h - newHeight)/2  -- Center vertically if no edge alignment
+    winFrame.y = winFrame.y + (winFrame.h - newHeight)/2  -- Center vertically if no edge alignment
   end
 
-  frame.w, frame.h = newWidth, newHeight
-  win:setFrameInScreenBounds(frame)
+  winFrame.w, winFrame.h = newWidth, newHeight
+  window:setFrameInScreenBounds(winFrame)
 end
-
 hs.hotkey.bind({"cmd","alt","ctrl"}, "-", function() windowResizeStep(0.95) end)  -- Smaller
 hs.hotkey.bind({"cmd","alt","ctrl"}, "=", function() windowResizeStep(1.05) end)  -- Bigger
 
@@ -303,79 +295,79 @@ hs.hotkey.bind({"cmd","alt","ctrl"}, "=", function() windowResizeStep(1.05) end)
 
 local function moveWindowToScreen(direction)
   return function()
-    local windowObj = hs.window.focusedWindow()
-    if not windowObj then return end
+    local window = hs.window.focusedWindow()
+    if not window then return end
 
     -- Move window to new screen, only resize if needed, and place in the same relative screen position
 
-    local screenObj = windowObj:screen()
-    local window = windowObj:frame()
-    local screen = screenObj:frame()
-    local newScreenObj = direction == "right" and screenObj:next() or screenObj:previous()
-    local newScreen = newScreenObj:frame()
+    local screen = window:screen()
+    local winFrame = window:frame()
+    local screenFrame = screen:frame()
+    local newScreen = direction == "right" and screen:next() or screen:previous()
+    local newScreenFrame = newScreen:frame()
     local newX, newY, newW, newH
 
     -- Simulate centering the new screen inside the current one, then check the window position
     -- If the window is effectively inside the new screen, move it to the same position on the new screen
     -- Otherwise calculate the same relative window position on the new screen
-    -- local newScreenBoundX = (screen.w - newScreen.w)/2 + screen.x
-    -- local newScreenBoundY = (screen.h - newScreen.h)/2 + screen.y
-    -- local windowWidthInScreenBounds = window.x > newScreenBoundX and window.w < newScreen.w
-    -- local windowHeightInScreenBounds = window.y > newScreenBoundY and window.h < newScreen.h
+    -- local newScreenBoundX = (screenFrame.w - newScreenFrame.w)/2 + screenFrame.x
+    -- local newScreenBoundY = (screenFrame.h - newScreenFrame.h)/2 + screenFrame.y
+    -- local windowWidthInScreenBounds = winFrame.x > newScreenBoundX and winFrame.w < newScreenFrame.w
+    -- local windowHeightInScreenBounds = winFrame.y > newScreenBoundY and winFrame.h < newScreenFrame.h
 
     -- Horizontal positioning
-    if window.w > newScreen.w then
+    if winFrame.w > newScreenFrame.w then
       -- Maximize window width if larger than new screen
-      newX = newScreen.x
-      newW = newScreen.w
-    elseif window.w >= (screen.w - 2) then
+      newX = newScreenFrame.x
+      newW = newScreenFrame.w
+    elseif winFrame.w >= (screenFrame.w - 2) then
       -- Center on new screen if window is at or near max width
-      newX = newScreen.x + (newScreen.w - window.w)/2
-      newW = window.w
+      newX = newScreenFrame.x + (newScreenFrame.w - winFrame.w)/2
+      newW = winFrame.w
     -- elseif not windowWidthInScreenBounds then
     --   -- Clamp new window position to nearest screen edge
-    --   if window.x > newScreenBoundX then
-    --     newX = (newScreen.x + newScreen.w) - window.w
+    --   if winFrame.x > newScreenBoundX then
+    --     newX = (newScreenFrame.x + newScreenFrame.w) - winFrame.w
     --   else
-    --     newX = newScreen.x
+    --     newX = newScreenFrame.x
     --   end
-    --   newW = window.w
+    --   newW = winFrame.w
     else
       -- Place window in the same relative position on the new screen
-      local prevAvailableWidth = screen.w - window.w
-      local newAvailableWidth = newScreen.w - window.w
-      local leftMargin = window.x - screen.x
-      newX = newScreen.x + (leftMargin/prevAvailableWidth) * newAvailableWidth
-      newW = window.w
+      local prevAvailableWidth = screenFrame.w - winFrame.w
+      local newAvailableWidth = newScreenFrame.w - winFrame.w
+      local leftMargin = winFrame.x - screenFrame.x
+      newX = newScreenFrame.x + (leftMargin/prevAvailableWidth) * newAvailableWidth
+      newW = winFrame.w
     end
 
     -- Vertical positioning
-    if window.h > newScreen.h then
+    if winFrame.h > newScreenFrame.h then
       -- Maximize on new screen if window is larger than new screen
-      newY = newScreen.y
-      newH = newScreen.h
-    elseif window.h >= (screen.h - 2) then
+      newY = newScreenFrame.y
+      newH = newScreenFrame.h
+    elseif winFrame.h >= (screenFrame.h - 2) then
       -- Move to top if window is at or near max height
-      newY = newScreen.y
-      newH = window.h
+      newY = newScreenFrame.y
+      newH = winFrame.h
     -- elseif not windowHeightInScreenBounds then
     --   -- Clamp new window position to nearest edge
-    --   if window.y > newScreenBoundY then
-    --     newY = (newScreen.y + newScreen.h) - window.h
+    --   if winFrame.y > newScreenBoundY then
+    --     newY = (newScreenFrame.y + newScreenFrame.h) - winFrame.h
     --   else
-    --     newY = newScreen.y
+    --     newY = newScreenFrame.y
     --   end
-    --   newH = window.h
+    --   newH = winFrame.h
     else
       -- Place window in the same relative position on the new screen
-      local prevAvailableHeight = screen.h - window.h
-      local newAvailableHeight = newScreen.h - window.h
-      local topMargin = window.y - screen.y
-      newY = newScreen.y + (topMargin/prevAvailableHeight) * newAvailableHeight
-      newH = window.h
+      local prevAvailableHeight = screenFrame.h - winFrame.h
+      local newAvailableHeight = newScreenFrame.h - winFrame.h
+      local topMargin = winFrame.y - screenFrame.y
+      newY = newScreenFrame.y + (topMargin/prevAvailableHeight) * newAvailableHeight
+      newH = winFrame.h
     end
 
-    windowObj:setFrameInScreenBounds(hs.geometry.rect(newX, newY, newW, newH))
+    window:setFrameInScreenBounds(hs.geometry.rect(newX, newY, newW, newH))
   end
 end
 hs.hotkey.bind({"cmd", "alt", "ctrl", "shift"}, "right", moveWindowToScreen("right"))
