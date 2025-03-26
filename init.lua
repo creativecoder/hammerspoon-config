@@ -394,7 +394,8 @@ local function positionScreenWindows()
     {"Ghostty", nil, macbookScreen, hs.layout.maximized, nil, nil},
     {"Obsidian", nil, macbookScreen, hs.layout.maximized, nil, nil},
     {"Reminders", nil, macbookScreen, {x=0.34, y=0, w=0.66, h=1}, nil, nil},
-    {"Finder", nil, macbookScreen, {x=0.10, y=0.2, h=0.6, w=0.8}, nil, nil}
+    {"Finder", nil, macbookScreen, {x=0.10, y=0.2, h=0.6, w=0.8}, nil, nil},
+    {"Slack", nil, macbookScreen, {x=0, y=0, h=1, w=0.95}, nil, nil},
   }
 
   hs.layout.apply(macbookScreenLayout)
